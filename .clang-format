@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: 4
+BreakBeforeBraces: Allman
+IndentExternBlock: NoIndent
+IndentWidth: 4
+FixNamespaceComments: false
+PointerAlignment: Left
+UseTab: Never
