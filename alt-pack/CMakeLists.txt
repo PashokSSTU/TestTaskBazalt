@@ -9,12 +9,16 @@ set_target_properties (libaltpack PROPERTIES
 	SOVERSION ${PROJECT_VERSION} 
 )
 
-message ("CMAKE_INSTALL_LIBDIR: " ${CMAKE_INSTALL_LIBDIR})
-message ("CMAKE_INSTALL_INCLUDEDIR : " ${CMAKE_INSTALL_INCLUDEDIR})
+set(CMAKE_INSTALL_INCLUDEDIR "/usr/local/include")
+set(CMAKE_INSTALL_LIBDIR "/usr/local/lib")
 
 target_link_libraries(libaltpack curl)
 
+if(NOT EXISTS "${CMAKE_INSTALL_INCLUDEDIR}/alt-pack")
+    file(MAKE_DIRECTORY "${CMAKE_INSTALL_INCLUDEDIR}/alt-pack")
+endif()
+
 install(TARGETS libaltpack
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/altpack/"
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/alt-pack/"
 )
