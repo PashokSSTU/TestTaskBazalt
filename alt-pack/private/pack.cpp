@@ -62,7 +62,10 @@ rest::rest() { m_curl = curl_easy_init(); }
 
 void rest::send_request(const std::string& method)
 {
-    printf("Method: %s\n", (std::string(ALT_API) + method).c_str());
+    size_t branch_pos = method.find_last_of('/');
+    printf("Get package list from branch %s\n",
+           method.substr(branch_pos + 1).c_str());
+
     curl_easy_setopt(m_curl, CURLOPT_URL,
                      (std::string(ALT_API) + method).c_str());
     m_res = curl_easy_perform(m_curl);
@@ -84,4 +87,22 @@ void rest::set_progress_bar()
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, false);
     curl_easy_setopt(m_curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 }
+
+package_list::package_list()
+{
+    Json::CharReaderBuilder builder;
+    m_reader_ptr.reset(builder.newCharReader());
+}
+
+void package_list::parse(const std::string& package_data)
+{
+    std::string errors;
+    if (!m_reader_ptr->parse(&package_data.front(), &package_data.back(),
+                             &m_value, &errors))
+    {
+        throw std::runtime_error(errors);
+    }
+}
+
+Json::Value package_list::get_root() { return m_value; }
 }

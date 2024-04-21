@@ -2,6 +2,8 @@
 #define EXPORT __attribute__((__visibility__("default")))
 
 #include <curl/curl.h>
+#include <json/json.h>
+#include <memory>
 #include <string>
 
 namespace alt
@@ -36,5 +38,18 @@ private:
 
 private:
     static constexpr const char* ALT_API = "https://rdb.altlinux.org/api";
+};
+
+// Класс для обработки результатов из базы данных
+class EXPORT package_list
+{
+public:
+    package_list();
+    void parse(const std::string& package_data);
+    Json::Value get_root();
+
+private:
+    Json::Value m_value;
+    std::unique_ptr<Json::CharReader> m_reader_ptr;
 };
 }
