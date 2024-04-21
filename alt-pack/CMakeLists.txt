@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 set (CMAKE_CXX_STANDARD 17)
-project(alt-package-analyser VERSION 0.1)
+project(alt-package-analyser VERSION 0.2)
 
 add_library(altpack SHARED private/pack.cpp)
 
