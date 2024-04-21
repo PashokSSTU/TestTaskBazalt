@@ -6,7 +6,7 @@ set(CMAKE_INSTALL_RPATH "/usr/local/lib")
 
 add_executable(branch_cli main.cpp)
 
-target_link_libraries(branch_cli PRIVATE altpack curl)
+target_link_libraries(branch_cli PRIVATE altpack)
 
 install(TARGETS branch_cli
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
