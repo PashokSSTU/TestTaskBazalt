@@ -66,8 +66,9 @@ void rest::send_request(const std::string& method)
     printf("Get package list from branch %s\n",
            method.substr(branch_pos + 1).c_str());
 
-    curl_easy_setopt(m_curl, CURLOPT_URL,
-                     (std::string(ALT_API) + method).c_str());
+    curl_easy_setopt(
+        m_curl, CURLOPT_URL,
+        (std::string(ALT_API) + std::string(REST_EXPORT) + method).c_str());
     m_res = curl_easy_perform(m_curl);
 
     if (m_res != CURLE_OK)

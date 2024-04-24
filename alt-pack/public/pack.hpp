@@ -38,6 +38,8 @@ private:
 
 private:
     static constexpr const char* ALT_API = "https://rdb.altlinux.org/api";
+    static constexpr const char* REST_EXPORT =
+        "/export/branch_binary_packages/";
 };
 
 // Класс для обработки результатов из базы данных
