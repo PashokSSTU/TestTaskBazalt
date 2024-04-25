@@ -47,11 +47,12 @@ class EXPORT package_list
 {
 public:
     package_list();
-    void parse(const std::string& package_data);
-    Json::Value get_root();
+    void parse(const std::string& first_branch_pkgs,
+               const std::string& second_branch_pkgs);
 
 private:
-    Json::Value m_value;
+    Json::Value m_first_values;
+    Json::Value m_second_values;
     std::unique_ptr<Json::CharReader> m_reader_ptr;
 };
 }

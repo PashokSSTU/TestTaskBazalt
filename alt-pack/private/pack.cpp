@@ -95,15 +95,18 @@ package_list::package_list()
     m_reader_ptr.reset(builder.newCharReader());
 }
 
-void package_list::parse(const std::string& package_data)
+void package_list::parse(const std::string& first_branch_pkgs,
+                         const std::string& second_branch_pkgs)
 {
     std::string errors;
-    if (!m_reader_ptr->parse(&package_data.front(), &package_data.back(),
-                             &m_value, &errors))
+    if (!m_reader_ptr->parse(&first_branch_pkgs.front(),
+                             &first_branch_pkgs.back(), &m_first_values,
+                             &errors) ||
+        !m_reader_ptr->parse(&second_branch_pkgs.front(),
+                             &second_branch_pkgs.back(), &m_second_values,
+                             &errors))
     {
         throw std::runtime_error(errors);
     }
 }
-
-Json::Value package_list::get_root() { return m_value; }
 }
