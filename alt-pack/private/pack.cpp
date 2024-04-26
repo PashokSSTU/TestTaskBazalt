@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "../public/pack.hpp"
+#include "version.hpp"
 
 namespace
 {
@@ -53,7 +54,8 @@ int progress_callback(void* clientp, double dltotal, double dlnow,
 }
 
 void compare_with_branch(const Json::Value original,
-                         const Json::Value comparable, Json::Value& packages)
+                         const Json::Value comparable, Json::Value& packages,
+                         bool compare_versions)
 {
     std::unordered_map<pkg_info_t, Json::Value, boost::hash<pkg_info_t>>
         packages_table;
@@ -68,6 +70,13 @@ void compare_with_branch(const Json::Value original,
             {package["name"].asString(), package["arch"].asString()});
         if (it == packages_table.end())
             packages.append(package);
+        else if (compare_versions &&
+                 alt::internal::is_release(package["version"].asString()))
+            if (!alt::internal::is_release(it->second["version"].asString()) ||
+                alt::internal::compare_versions(
+                    package["version"].asString(),
+                    it->second["version"].asString()))
+                packages.append(package);
     }
 }
 }
@@ -135,14 +144,18 @@ std::string package_list::compare()
     Json::Value root;
     Json::Value branch1(Json::arrayValue);
     Json::Value branch2(Json::arrayValue);
+    Json::Value releases(Json::arrayValue);
 
     std::thread th1(compare_with_branch, m_first_branch, m_second_branch,
-                    std::ref(branch1));
+                    std::ref(branch1), false);
     std::thread th2(compare_with_branch, m_second_branch, m_first_branch,
-                    std::ref(branch2));
+                    std::ref(branch2), false);
+    std::thread th3(compare_with_branch, m_first_branch, m_second_branch,
+                    std::ref(releases), true);
 
     th1.join();
     th2.join();
+    th3.join();
 
     const std::string missing_from_second_branch =
         "Missing from " + m_branches_names[1];
@@ -151,6 +164,7 @@ std::string package_list::compare()
 
     root["branches"][missing_from_second_branch] = branch1;
     root["branches"][missing_from_first_branch] = branch2;
+    root["branches"]["releases"] = releases;
 
     return root.toStyledString();
 }
