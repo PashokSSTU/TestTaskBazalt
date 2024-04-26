@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <functional>
 #include <sstream>
+#include <stdio.h>
 #include <string>
 #include <vector>
 
@@ -44,19 +46,30 @@ comparison_result compare_versions(const std::string& version1,
     std::vector<std::string> parts1 = split(version1, '.');
     std::vector<std::string> parts2 = split(version2, '.');
 
+    auto to_lower = [](const std::string& str)
+    {
+        std::string result = str;
+        std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+        return result;
+    };
+
+    std::transform(parts1.begin(), parts1.end(), parts1.begin(), to_lower);
+    std::transform(parts2.begin(), parts2.end(), parts2.begin(), to_lower);
+
     for (size_t i = 0; i < std::max(parts1.size(), parts2.size()); ++i)
     {
-        std::transform(parts1[i].begin(), parts1[i].end(), parts1[i].begin(),
-                       ::tolower);
-        std::transform(parts2[i].begin(), parts2[i].end(), parts2[i].begin(),
-                       ::tolower);
-
-        if (parts1[i] < parts2[i])
-            return comparison_result::LESS;
-        if (parts1[i] > parts2[i])
+        if (i < parts1.size() && i < parts2.size())
+        {
+            if (parts1[i] < parts2[i])
+                return comparison_result::LESS;
+            if (parts1[i] > parts2[i])
+                return comparison_result::GREATER;
+        }
+        else if (i < parts1.size())
             return comparison_result::GREATER;
+        else
+            return comparison_result::LESS;
     }
-
     return comparison_result::EQUAL;
 }
 }

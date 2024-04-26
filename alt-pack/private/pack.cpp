@@ -75,7 +75,8 @@ void compare_with_branch(const Json::Value original,
             if (!alt::internal::is_release(it->second["version"].asString()) ||
                 alt::internal::compare_versions(
                     package["version"].asString(),
-                    it->second["version"].asString()))
+                    it->second["version"].asString()) ==
+                    alt::internal::comparison_result::GREATER)
                 packages.append(package);
     }
 }
