@@ -46,13 +46,21 @@ private:
 class EXPORT package_list
 {
 public:
-    package_list();
+    package_list(const std::vector<std::string>& names)
+        : m_branches_names(names)
+    {
+        Json::CharReaderBuilder builder;
+        m_reader_ptr.reset(builder.newCharReader());
+    }
+
     void parse(const std::string& first_branch_pkgs,
                const std::string& second_branch_pkgs);
+    std::string compare();
 
 private:
-    Json::Value m_first_values;
-    Json::Value m_second_values;
+    Json::Value m_first_branch;
+    Json::Value m_second_branch;
     std::unique_ptr<Json::CharReader> m_reader_ptr;
+    std::vector<std::string> m_branches_names;
 };
 }

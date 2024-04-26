@@ -1,11 +1,18 @@
+#include <boost/functional/hash.hpp>
+#include <functional>
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
+#include <thread>
+#include <tuple>
+#include <unordered_map>
 
 #include "../public/pack.hpp"
 
 namespace
 {
+using pkg_info_t = std::tuple<std::string, std::string>;
+
 // Callback для записи ответа на запрос в строку
 size_t write_callback(void* contents, size_t size, size_t nmemb,
                       std::string* buffer)
@@ -43,6 +50,25 @@ int progress_callback(void* clientp, double dltotal, double dlnow,
     fflush(stdout);
 
     return 0;
+}
+
+void compare_with_branch(const Json::Value original,
+                         const Json::Value comparable, Json::Value& packages)
+{
+    std::unordered_map<pkg_info_t, Json::Value, boost::hash<pkg_info_t>>
+        packages_table;
+
+    for (const auto& package : comparable["packages"])
+        packages_table[{package["name"].asString(),
+                        package["arch"].asString()}] = package;
+
+    for (const auto& package : original["packages"])
+    {
+        auto it = packages_table.find(
+            {package["name"].asString(), package["arch"].asString()});
+        if (it == packages_table.end())
+            packages.append(package);
+    }
 }
 }
 
@@ -89,24 +115,43 @@ void rest::set_progress_bar()
     curl_easy_setopt(m_curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 }
 
-package_list::package_list()
-{
-    Json::CharReaderBuilder builder;
-    m_reader_ptr.reset(builder.newCharReader());
-}
-
 void package_list::parse(const std::string& first_branch_pkgs,
                          const std::string& second_branch_pkgs)
 {
     std::string errors;
     if (!m_reader_ptr->parse(&first_branch_pkgs.front(),
-                             &first_branch_pkgs.back(), &m_first_values,
+                             &first_branch_pkgs.back(), &m_first_branch,
                              &errors) ||
         !m_reader_ptr->parse(&second_branch_pkgs.front(),
-                             &second_branch_pkgs.back(), &m_second_values,
+                             &second_branch_pkgs.back(), &m_second_branch,
                              &errors))
     {
         throw std::runtime_error(errors);
     }
+}
+
+std::string package_list::compare()
+{
+    Json::Value root;
+    Json::Value branch1(Json::arrayValue);
+    Json::Value branch2(Json::arrayValue);
+
+    std::thread th1(compare_with_branch, m_first_branch, m_second_branch,
+                    std::ref(branch1));
+    std::thread th2(compare_with_branch, m_second_branch, m_first_branch,
+                    std::ref(branch2));
+
+    th1.join();
+    th2.join();
+
+    const std::string missing_from_second_branch =
+        "Missing from " + m_branches_names[1];
+    const std::string missing_from_first_branch =
+        "Missing from " + m_branches_names[0];
+
+    root["branches"][missing_from_second_branch] = branch1;
+    root["branches"][missing_from_first_branch] = branch2;
+
+    return root.toStyledString();
 }
 }
