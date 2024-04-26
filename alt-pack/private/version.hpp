@@ -13,6 +13,9 @@ enum comparison_result
     LESS
 };
 
+// Функция для определения, является ли версия release
+bool is_release(const std::string& version);
+
 // Функция для сравнения версий
 comparison_result compare_versions(const std::string& version1,
                                    const std::string& version2);
