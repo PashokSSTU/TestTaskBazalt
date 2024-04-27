@@ -53,8 +53,11 @@ public:
         m_reader_ptr.reset(builder.newCharReader());
     }
 
+    // Парсинг json-данных о пакетах
     void parse(const std::string& first_branch_pkgs,
                const std::string& second_branch_pkgs);
+
+    // Сравнение информации и пакетах
     std::string compare();
 
 private:

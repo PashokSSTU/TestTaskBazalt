@@ -53,6 +53,7 @@ int progress_callback(void* clientp, double dltotal, double dlnow,
     return 0;
 }
 
+// Функция с главной логикой сравнения веток для одного потока
 void compare_with_branch(const Json::Value original,
                          const Json::Value comparable, Json::Value& packages,
                          bool compare_versions)
@@ -73,6 +74,7 @@ void compare_with_branch(const Json::Value original,
             if (!compare_versions)
                 packages.append(package);
         }
+        // Сравнение release-versions, если выбран данный режим
         else if (compare_versions &&
                  alt::internal::is_release(package["version"].asString()))
         {
