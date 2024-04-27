@@ -1,5 +1,6 @@
 #include <CLI/CLI.hpp>
 #include <alt-pack/pack.hpp>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <stdio.h>
@@ -16,6 +17,10 @@ int main(int argc, char* argv[])
         std::vector<std::string> branches_names;
         app.add_option("-b,--branch", branches_names, "Branches name");
 
+        std::filesystem::path filepath;
+        app.add_option("-o,--output", filepath,
+                       "Filepath to .json file with result");
+
         CLI11_PARSE(app, argc, argv);
 
         if (branches_names.empty())
@@ -25,6 +30,9 @@ int main(int argc, char* argv[])
         }
         else if (branches_names.size() != 2)
             throw std::runtime_error("Invalid branch names");
+
+        if (filepath.empty())
+            throw std::runtime_error("Output file name not specified");
 
         // Инициализация библиотеки libcurl
         alt::curl_setup curl;
@@ -42,7 +50,8 @@ int main(int argc, char* argv[])
         alt::package_list package_list(branches_names);
         package_list.parse(branch1_pkgs, branch2_pkgs);
 
-        std::ofstream result("compared_packages.json");
+        std::filesystem::create_directory(filepath.parent_path());
+        std::ofstream result(filepath);
         result << package_list.compare();
     }
     catch (const std::runtime_error& e)
