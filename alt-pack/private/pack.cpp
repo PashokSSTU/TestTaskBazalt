@@ -69,15 +69,28 @@ void compare_with_branch(const Json::Value original,
         auto it = packages_table.find(
             {package["name"].asString(), package["arch"].asString()});
         if (it == packages_table.end())
-            packages.append(package);
+        {
+            if (!compare_versions)
+                packages.append(package);
+        }
         else if (compare_versions &&
                  alt::internal::is_release(package["version"].asString()))
-            if (!alt::internal::is_release(it->second["version"].asString()) ||
-                alt::internal::compare_versions(
-                    package["version"].asString(),
-                    it->second["version"].asString()) ==
-                    alt::internal::comparison_result::GREATER)
+        {
+            bool is_greater =
+                (!alt::internal::is_release(it->second["version"].asString()))
+                    ? true
+                    : false;
+
+            is_greater = (alt::internal::compare_versions(
+                              package["version"].asString(),
+                              it->second["version"].asString()) ==
+                          alt::internal::comparison_result::GREATER)
+                             ? true
+                             : false;
+
+            if (is_greater)
                 packages.append(package);
+        }
     }
 }
 }

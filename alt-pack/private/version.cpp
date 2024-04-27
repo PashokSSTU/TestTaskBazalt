@@ -7,17 +7,28 @@
 
 namespace
 {
-// Функция для разделения строки по разделителю
-std::vector<std::string> split(const std::string& str, char delim)
+// Функция разбивает строку версии на компоненты
+std::vector<std::string> split_version(const std::string& version)
 {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream iss(str);
-    while (std::getline(iss, token, delim))
+    std::vector<std::string> parts;
+    std::string part;
+    char prev_symbol = version[0];
+    for (char symbol : version)
     {
-        tokens.push_back(token);
+        // Если текущий символ отличается от предыдущего и один из них - цифра,
+        // или если текущий символ цифра, а предыдущий - буква,
+        // то добавляем новый компонент версии
+        if ((isdigit(symbol) && !isdigit(prev_symbol)) ||
+            (!isdigit(symbol) && isdigit(prev_symbol)))
+        {
+            parts.push_back(part);
+            part.clear();
+        }
+        part += symbol;
+        prev_symbol = symbol;
     }
-    return tokens;
+    parts.push_back(part); // Добавляем последний компонент
+    return parts;
 }
 }
 
@@ -39,37 +50,57 @@ bool is_release(const std::string& version)
            version.find("beta") == std::string::npos;
 }
 
-// Функция для сравнения версий
-comparison_result compare_versions(const std::string& version1,
-                                   const std::string& version2)
+// Функция сравнения версий
+int compare_versions(const std::string& v1, const std::string& v2)
 {
-    std::vector<std::string> parts1 = split(version1, '.');
-    std::vector<std::string> parts2 = split(version2, '.');
+    std::vector<std::string> parts1 = split_version(v1);
+    std::vector<std::string> parts2 = split_version(v2);
 
-    auto to_lower = [](const std::string& str)
+    size_t maxLength = std::max(parts1.size(), parts2.size());
+    for (size_t i = 0; i < maxLength; ++i)
     {
-        std::string result = str;
-        std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-        return result;
-    };
+        std::string part1 = (i < parts1.size()) ? parts1[i] : "0";
+        std::string part2 = (i < parts2.size()) ? parts2[i] : "0";
 
-    std::transform(parts1.begin(), parts1.end(), parts1.begin(), to_lower);
-    std::transform(parts2.begin(), parts2.end(), parts2.begin(), to_lower);
+        // Преобразуем компоненты в числа, если это возможно
+        int num1 = 0, num2 = 0;
+        bool is_num1 = true, is_num2 = true;
 
-    for (size_t i = 0; i < std::max(parts1.size(), parts2.size()); ++i)
-    {
-        if (i < parts1.size() && i < parts2.size())
+        try
         {
-            if (parts1[i] < parts2[i])
+            num1 = std::stoi(part1);
+        }
+        catch (...)
+        {
+            is_num1 = false;
+        }
+
+        try
+        {
+            num2 = std::stoi(part2);
+        }
+        catch (...)
+        {
+            is_num2 = false;
+        }
+
+        // Сравниваем числа или строки
+        if (is_num1 && is_num2)
+        {
+            if (num1 < num2)
                 return comparison_result::LESS;
-            if (parts1[i] > parts2[i])
+            if (num1 > num2)
                 return comparison_result::GREATER;
         }
-        else if (i < parts1.size())
-            return comparison_result::GREATER;
         else
-            return comparison_result::LESS;
+        {
+            if (part1 < part2)
+                return comparison_result::LESS;
+            if (part1 > part2)
+                return comparison_result::GREATER;
+        }
     }
+
     return comparison_result::EQUAL;
 }
 }
